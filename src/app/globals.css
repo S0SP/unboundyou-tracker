@@ -1,26 +1,248 @@
 @import "tailwindcss";
 
+@theme {
+  --color-background: var(--bg-base);
+  --color-foreground: var(--text-primary);
+  --color-card: var(--bg-panel);
+  --color-card-foreground: var(--text-primary);
+  --color-popover: var(--bg-elevated);
+  --color-popover-foreground: var(--text-primary);
+  --color-primary: var(--brand-blue);
+  --color-primary-foreground: #ffffff;
+  --color-secondary: var(--brand-green);
+  --color-secondary-foreground: #ffffff;
+  --color-muted: var(--bg-hover);
+  --color-muted-foreground: var(--text-muted);
+  --color-accent: var(--bg-hover);
+  --color-accent-foreground: var(--text-primary);
+  --color-success: var(--brand-green);
+  --color-border: var(--border-base);
+  --color-input: var(--border-base);
+  --color-ring: var(--brand-blue);
+  
+  --shadow-premium-sm: 0 2px 8px rgba(0, 0, 0, 0.04);
+  --shadow-premium-md: 0 8px 24px rgba(0, 0, 0, 0.06);
+  --shadow-premium-lg: 0 16px 40px rgba(0, 0, 0, 0.08);
+
+  --radius-btn: 12px;
+  --radius-card: 20px;
+  --radius-input: 14px;
+  --radius-dialog: 24px;
+  --radius-dropdown: 16px;
+}
+
+@font-face {
+  font-family: 'Inter';
+  src: url('https://www.unboundyou.com/_next/static/media/ba9851c3c22cd980-s.woff2') format('woff2');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* ============================
+   LIGHT MODE TOKENS (default)
+   ============================ */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --bg-base:         #F9FAFB;
+  --bg-panel:        #FFFFFF;
+  --bg-elevated:     #FFFFFF;
+  --bg-hover:        #F3F4F6;
+  --bg-input:        #FFFFFF;
+
+  --border-base:     #E5E7EB;
+  --border-strong:   #D1D5DB;
+
+  --text-primary:    #111827;
+  --text-secondary:  #4B5563;
+  --text-muted:      #6B7280;
+  --text-faint:      #9CA3AF;
+
+  --brand-blue:      #2F80F9;
+  --brand-green:     #08BD7E;
+
+  --sidebar-bg:      #0B1120;
+  --sidebar-border:  rgba(51,65,85,0.5);
+
+  --scrollbar-color: #2F80F9;
+  --font-inter: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+/* ============================
+   DARK MODE TOKENS
+   ============================ */
+html.dark {
+  --bg-base:         #0D1117;
+  --bg-panel:        #161B26;
+  --bg-elevated:     #1E2535;
+  --bg-hover:        #1E2A3F;
+  --bg-input:        #1A2030;
+
+  --border-base:     #2A3547;
+  --border-strong:   #374357;
+
+  --text-primary:    #E8EDF5;
+  --text-secondary:  #BCC8D8;
+  --text-muted:      #7A8FAD;
+  --text-faint:      #4A5568;
+
+  --brand-blue:      #3D8EF7;
+  --brand-green:     #0ECFA4;
+
+  --sidebar-bg:      #080D16;
+  --sidebar-border:  rgba(30,37,53,0.8);
+
+  --scrollbar-color: #3D8EF7;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@layer base {
+  html {
+    font-size: 15px;
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background-color: var(--bg-base);
+    color: var(--text-primary);
+    font-family: var(--font-inter);
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+    transition: background-color 0.3s ease, color 0.3s ease;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-inter);
+    font-weight: 700;
+    color: var(--text-primary);
+    letter-spacing: -0.02em;
+  }
+
+  p {
+    color: var(--text-muted);
+    line-height: 1.6;
+  }
+
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb {
+    background: var(--scrollbar-color);
+    border-radius: 3px;
+  }
+
+  ::selection {
+    background: var(--brand-blue);
+    color: white;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+.inter { font-family: var(--font-inter); }
+
+/* Smooth theme transitions across all elements */
+*, *::before, *::after {
+  transition-property: background-color, border-color, color, fill, stroke, box-shadow, opacity;
+  transition-duration: 200ms;
+  transition-timing-function: ease;
+}
+
+/* Exempt animations from transition override */
+.animate-spin, .animate-pulse, .animate-bounce, .animate-ping {
+  transition: none !important;
+}
+
+/* Custom premium interactions */
+.btn-transition {
+  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.btn-transition:active {
+  transform: scale(0.98);
+}
+
+.hover-card-premium {
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s ease;
+}
+.hover-card-premium:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-premium-md);
+}
+
+/* ============================
+   DARK MODE GLOBAL OVERRIDES
+   Covers hardcoded Tailwind classes used throughout components
+   ============================ */
+html.dark .bg-white {
+  background-color: var(--bg-panel) !important;
+}
+
+html.dark .bg-gray-50,
+html.dark .bg-slate-50 {
+  background-color: var(--bg-elevated) !important;
+}
+
+html.dark .bg-gray-100,
+html.dark .bg-slate-100,
+html.dark .bg-muted {
+  background-color: var(--bg-elevated) !important;
+}
+
+html.dark .bg-gray-200,
+html.dark .bg-slate-200 {
+  background-color: #2A3547 !important;
+}
+
+html.dark .border-gray-100,
+html.dark .border-gray-200,
+html.dark .border-slate-100,
+html.dark .border-slate-200,
+html.dark .border-border {
+  border-color: var(--border-base) !important;
+}
+
+html.dark .border-gray-300,
+html.dark .border-slate-300 {
+  border-color: var(--border-strong) !important;
+}
+
+html.dark .text-gray-900,
+html.dark .text-slate-900,
+html.dark .text-foreground {
+  color: var(--text-primary) !important;
+}
+
+html.dark .text-gray-800,
+html.dark .text-slate-800 {
+  color: var(--text-secondary) !important;
+}
+
+html.dark .text-gray-700,
+html.dark .text-slate-700 {
+  color: var(--text-secondary) !important;
+}
+
+html.dark .text-gray-600,
+html.dark .text-slate-600 {
+  color: var(--text-muted) !important;
+}
+
+html.dark .text-gray-500,
+html.dark .text-slate-500,
+html.dark .text-muted-foreground {
+  color: var(--text-muted) !important;
+}
+
+html.dark .text-gray-400,
+html.dark .text-slate-400 {
+  color: var(--text-faint) !important;
+}
+
+/* Shadow softening in dark mode */
+html.dark .shadow-sm,
+html.dark .shadow-premium-sm {
+  --tw-shadow: 0 1px 3px 0 rgba(0,0,0,0.4), 0 1px 2px -1px rgba(0,0,0,0.4);
+}
+html.dark .shadow-md,
+html.dark .shadow-premium-md {
+  --tw-shadow: 0 4px 12px -1px rgba(0,0,0,0.5), 0 2px 8px -2px rgba(0,0,0,0.4);
+}
+html.dark .shadow-2xl,
+html.dark .shadow-premium-lg {
+  --tw-shadow: 0 25px 50px -12px rgba(0,0,0,0.7);
 }
