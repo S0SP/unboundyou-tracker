@@ -98,6 +98,16 @@ export default function DashboardPage() {
     );
   }
 
+  const latestTrend = trends.length > 0 ? trends[trends.length - 1] : null;
+  const oldestTrend = trends.length > 0 ? trends[0] : null;
+  let avgSuccess = 0;
+  let successChange = 0;
+  if (latestTrend && oldestTrend) {
+    avgSuccess = Math.round((latestTrend.attendance + latestTrend.progress) / 2);
+    const oldSuccess = Math.round((oldestTrend.attendance + oldestTrend.progress) / 2);
+    successChange = Number((avgSuccess - oldSuccess).toFixed(1));
+  }
+
   return (
     <div className="space-y-8 animate-in fade-in duration-200">
       {/* Welcome Header */}
@@ -204,9 +214,22 @@ export default function DashboardPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Attendance & Progress Chart */}
         <div className="lg:col-span-2 bg-white border border-gray-200 p-6 rounded-2xl">
-          <h2 className="text-lg font-bold tracking-tight text-gray-900 mb-6">
-            Academy Success Trends
-          </h2>
+          <div className="mb-6 flex justify-between items-start">
+            <div>
+              <h2 className="text-lg font-bold tracking-tight text-gray-900 mb-1">
+                Academy Success Trends
+              </h2>
+              <div className="flex items-baseline gap-2 mt-2">
+                <span className="text-3xl font-extrabold text-gray-900">{avgSuccess}%</span>
+                <span className="text-sm font-semibold text-gray-500">Avg. Success</span>
+                {successChange !== 0 && (
+                  <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${successChange > 0 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                    {successChange > 0 ? '↑' : '↓'} {Math.abs(successChange)}%
+                  </span>
+                )}
+              </div>
+            </div>
+          </div>
           <div className="h-[280px] w-full">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={trends} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
@@ -221,7 +244,7 @@ export default function DashboardPage() {
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" />
-                <XAxis dataKey="name" stroke="#64748B" fontSize={10} tickLine={false} />
+                <XAxis dataKey="name" stroke="#64748B" fontSize={10} tickLine={false} minTickGap={30} />
                 <YAxis stroke="#64748B" fontSize={10} tickLine={false} />
                 <Tooltip
                   contentStyle={{
@@ -233,7 +256,7 @@ export default function DashboardPage() {
                   }}
                 />
                 <Area
-                  type="monotone"
+                  type="linear"
                   dataKey="attendance"
                   stroke="#2F80F9"
                   strokeWidth={2.5}
@@ -242,7 +265,7 @@ export default function DashboardPage() {
                   name="Attendance %"
                 />
                 <Area
-                  type="monotone"
+                  type="linear"
                   dataKey="progress"
                   stroke="#08BD7E"
                   strokeWidth={2.5}
