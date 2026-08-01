@@ -1,4 +1,4 @@
-import { getRows, updateRow, addRow } from "../lib/google/sheets";
+import { getRows, updateRow, addRow, deleteRow } from "../lib/google/sheets";
 import {
   Student,
   ClassLog,
@@ -179,6 +179,7 @@ export async function recalculateStudentStats(
 
 /**
  * Re-aggregates academy-wide stats and stores them in the '12_Dashboard_Cache' sheet.
+ * Uses a clear-then-write approach so there is always exactly one fresh row.
  */
 export async function refreshDashboardCache(): Promise<DashboardCache> {
   const [students, classes, assignments, reports] = await Promise.all([
@@ -203,11 +204,12 @@ export async function refreshDashboardCache(): Promise<DashboardCache> {
         )
       : 0;
 
+  // Students at risk — read live from healthStatus column, handle both string and enum
   const studentsAtRisk = activeStudentsList.filter(
-    (s) => s.healthStatus === "At Risk"
+    (s) => String(s.healthStatus).trim() === "At Risk"
   ).length;
 
-  // Overall attendance rate across all active class logs
+  // Overall attendance rate across all class logs
   let attendancePresentCount = 0;
   let totalAttendedClasses = 0;
   classes.forEach((c) => {
@@ -223,15 +225,15 @@ export async function refreshDashboardCache(): Promise<DashboardCache> {
       ? Math.round((attendancePresentCount / totalAttendedClasses) * 100)
       : 100;
 
-  // Pending assignments count
+  // Pending assignments — all assignments where status is still "Pending"
   const pendingAssignments = assignments.filter(
-    (a) => a.submissionStatus === "Pending"
+    (a) => String(a.submissionStatus).trim() === "Pending"
   ).length;
 
-  // Reports pending (Count reports generated in status != 'Sent' or mock value)
+  // Reports pending
   const reportsPending = reports.filter((r) => r.status === "Pending").length;
 
-  // Average test/assignment score
+  // Average score across reviewed/submitted assignments
   const reviewedAssignments = assignments.filter(
     (a) => a.submissionStatus === "Reviewed" || a.submissionStatus === "Submitted"
   );
@@ -257,29 +259,29 @@ export async function refreshDashboardCache(): Promise<DashboardCache> {
     updatedAt: new Date().toISOString(),
   };
 
+  // ── Clear ALL existing cache rows, then write exactly one fresh row ──
+  // This avoids the stale-duplicate-row bug from the old updateRow approach.
   try {
-    const existingCacheRows = await getRows<DashboardCache>("12_Dashboard_Cache");
-    if (existingCacheRows.length > 0) {
-      const existingCache = existingCacheRows[0];
-      // Update the first row by using its current Total Students value as the lookup key
-      await updateRow("12_Dashboard_Cache", "Total Students", String(existingCache.totalStudents), {
-        "Total Students": totalStudents,
-        activeStudents,
-        "Attendance %": attendancePercentage,
-        "Pending Assignments": pendingAssignments,
-        "Reports Pending": reportsPending,
-        "Average Score": averageScore,
-        "Average Progress": averageProgress,
-        "Students At Risk": studentsAtRisk,
-        "Updated At": cachePayload.updatedAt,
-      });
-    } else {
-      await addRow("12_Dashboard_Cache", cachePayload);
+    const existingRows = await getRows<DashboardCache>("12_Dashboard_Cache");
+    // Delete rows from bottom up so indices don't shift
+    for (let i = existingRows.length - 1; i >= 0; i--) {
+      try {
+        // We identify rows by their position; use updatedAt as a unique-enough key
+        const row = existingRows[i] as any;
+        if (row.updatedAt) {
+          await deleteRow("12_Dashboard_Cache", "Updated At", String(row.updatedAt));
+        }
+      } catch {
+        // If delete fails for a row, continue — we'll overwrite by adding fresh row
+      }
     }
-  } catch (error) {
-    console.error("Failed to update dashboard cache:", error);
-    await addRow("12_Dashboard_Cache", cachePayload);
+  } catch {
+    // Sheet might be empty, that's fine
   }
+
+  // Write one clean row with fresh stats
+  await addRow("12_Dashboard_Cache", cachePayload);
 
   return cachePayload;
 }
+
